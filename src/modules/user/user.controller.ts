@@ -11,12 +11,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { RoleEnum, User } from 'src/common';
+import { RoleEnum, StorageEnum, User } from 'src/common';
 import { Auth } from 'src/common/decorators/auth.decorator';
 import type { UserDocument } from 'src/DB';
 import { preferredLanguageInterceptor } from 'src/common/interceptors';
 import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { fileValidation, localFileUpload } from 'src/common/utils/multer';
+import { cloudFileUpload, fileValidation, localFileUpload } from 'src/common/utils/multer';
 import type { IMulterFile } from '../../common/interfaces/multer.interface';
 
 @Controller('user')
@@ -42,8 +42,8 @@ export class UserController {
   @UseInterceptors(
     FileInterceptor(
       'profileImage',
-      localFileUpload({
-        folder: 'User',
+      cloudFileUpload({
+        storageApproach:StorageEnum.disk,
         validation: fileValidation.image,
         fileSize: 2,
       }),
