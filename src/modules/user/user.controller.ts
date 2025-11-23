@@ -2,7 +2,12 @@ import {
   Controller,
   Get,
   Headers,
+  MaxFileSizeValidator,
+  ParseFilePipe,
+  Patch,
   Post,
+  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -10,6 +15,9 @@ import { RoleEnum, User } from 'src/common';
 import { Auth } from 'src/common/decorators/auth.decorator';
 import type { UserDocument } from 'src/DB';
 import { preferredLanguageInterceptor } from 'src/common/interceptors';
+import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { fileValidation, localFileUpload } from 'src/common/utils/multer';
+import type { IMulterFile } from '../../common/interfaces/multer.interface';
 
 @Controller('user')
 export class UserController {
@@ -30,4 +38,25 @@ export class UserController {
     });
     return { message: 'Done' };
   }
+
+  @UseInterceptors(
+    FileInterceptor(
+      'profileImage',
+      localFileUpload({
+        folder: 'User',
+        validation: fileValidation.image,
+        fileSize: 2,
+      }),
+    ),
+  )
+  @Auth([RoleEnum.user])
+  @Patch('profile-image')
+  profileImage(@UploadedFile(
+    ParseFilePipe
+  ) file: IMulterFile) {
+    return { message: 'Done', file };
+  }
+
+
+
 }
