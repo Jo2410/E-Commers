@@ -6,6 +6,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import type { Request } from 'express';
 import { randomUUID } from 'node:crypto';
+import { S3Service } from 'src/common';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { randomUUID } from 'node:crypto';
   controllers: [UserController],
   providers: [
     UserService,
+    S3Service
   ],
   exports: [],
 })

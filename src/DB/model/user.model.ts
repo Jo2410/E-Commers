@@ -95,6 +95,8 @@ export class User {
   changeCredentialsTime: Date;
 
   otp:OtpDocument[]
+  @Prop({type:String})
+  profilePicture:string
 }
 
 export type UserDocument = HydratedDocument<User>;

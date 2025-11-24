@@ -39,6 +39,8 @@ export class UserController {
     return { message: 'Done' };
   }
 
+
+
   @UseInterceptors(
     FileInterceptor(
       'profileImage',
@@ -51,10 +53,14 @@ export class UserController {
   )
   @Auth([RoleEnum.user])
   @Patch('profile-image')
-  profileImage(@UploadedFile(
-    ParseFilePipe
-  ) file: IMulterFile) {
-    return { message: 'Done', file };
+  async profileImage(
+    @User() user:UserDocument,
+    
+    @UploadedFile
+    (ParseFilePipe) 
+  file: Express.Multer.File) {
+    const url=await this.userService.profileImage(file,user)
+    return { message: 'Done', data:{url} };
   }
 
 
