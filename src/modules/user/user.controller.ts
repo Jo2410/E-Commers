@@ -11,7 +11,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { RoleEnum, StorageEnum, User } from 'src/common';
+import { IUser, RoleEnum, StorageEnum, User } from 'src/common';
 import { Auth } from 'src/common/decorators/auth.decorator';
 import type { UserDocument } from 'src/DB';
 import { preferredLanguageInterceptor } from 'src/common/interceptors';
@@ -58,9 +58,9 @@ export class UserController {
     
     @UploadedFile
     (ParseFilePipe) 
-  file: Express.Multer.File) {
-    const url=await this.userService.profileImage(file,user)
-    return { message: 'Done', data:{url} };
+  file: Express.Multer.File):Promise<{message:string;data:{profile:IUser}}> {
+    const profile=await this.userService.profileImage(file,user)
+    return { message: 'Done', data:{profile} };
   }
 
 

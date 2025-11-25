@@ -6,19 +6,16 @@ import { UserDocument } from 'src/DB';
 export class UserService {
   constructor(private readonly s3service: S3Service) {}
 
-  allUsers(): IUser[] {
-    return [
-      { id: 2, email: 'asdf@gmail.com', password: 'k123', username: 'sdfsga' },
-    ];
-  }
-
-  async profileImage(file: Express.Multer.File, user: UserDocument):Promise<string> {
+  async profileImage(
+    file: Express.Multer.File,
+    user: UserDocument,
+  ): Promise<UserDocument> {
     user.profilePicture = await this.s3service.uploadFile({
       file,
-      storageApproach:StorageEnum.disk,
+      storageApproach: StorageEnum.disk,
       path: `user/${user._id.toString()}`,
     });
-    await user.save()
-    return user.profilePicture;
+    await user.save();
+    return user;
   }
 }
