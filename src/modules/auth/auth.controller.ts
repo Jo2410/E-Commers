@@ -14,6 +14,7 @@ import {
   SignupBodyDto,
 } from './dto/auth.dto';
 import { LoginResponse } from './entities/auth.entity';
+import { IResponse, successResponse } from 'src/common';
 
 // @UsePipes(new ValidationPipe({
 //             whitelist:true,
@@ -34,42 +35,45 @@ export class AuthenticationController {
   async signup(
     @Body()
     body: SignupBodyDto,
-  ): Promise<{ message: string }> {
+  ): Promise<IResponse> {
     console.log({ body });
 
     await this.AuthenticationService.signup(body);
 
-    return { message: 'Done' };
+    return successResponse();
   }
 
   @Post('resend-confirm-email')
   async resendConfirmEmail(
     @Body()
     body: ResendConfirmEmailDto,
-  ): Promise<{ message: string }> {
+  ): Promise<IResponse> {
     console.log({ body });
 
     await this.AuthenticationService.resendConfirmEmail(body);
 
-    return { message: 'Done' };
+    return successResponse();
   }
 
   @Patch('confirm-email')
   async confirmEmail(
     @Body()
     body: ConfirmEmailDto,
-  ): Promise<{ message: string }> {
+  ): Promise<IResponse> {
     console.log({ body });
 
     await this.AuthenticationService.confirmEmail(body);
 
-    return { message: 'Done' };
+    return successResponse();
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  async login(@Body() body: loginBodyDto):Promise<LoginResponse> {
+  async login(@Body() body: loginBodyDto): Promise<IResponse<LoginResponse>> {
     const credentials = await this.AuthenticationService.login(body);
-    return { message: 'Done', data: { credentials } };
+    return successResponse<LoginResponse>({
+      message: 'Done',
+      data: { credentials },
+    });
   }
 }

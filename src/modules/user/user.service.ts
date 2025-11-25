@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IUser, S3Service, StorageEnum } from 'src/common';
+import { S3Service, StorageEnum } from 'src/common';
 import { UserDocument } from 'src/DB';
 
 @Injectable()

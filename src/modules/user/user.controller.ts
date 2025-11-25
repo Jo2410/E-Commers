@@ -1,43 +1,21 @@
 import {
   Controller,
-  Get,
-  Headers,
-  MaxFileSizeValidator,
   ParseFilePipe,
   Patch,
-  Post,
   UploadedFile,
-  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { IUser, RoleEnum, StorageEnum, User } from 'src/common';
+import { IResponse, RoleEnum, StorageEnum, successResponse, User } from 'src/common';
 import { Auth } from 'src/common/decorators/auth.decorator';
 import type { UserDocument } from 'src/DB';
-import { preferredLanguageInterceptor } from 'src/common/interceptors';
-import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { cloudFileUpload, fileValidation, localFileUpload } from 'src/common/utils/multer';
-import type { IMulterFile } from '../../common/interfaces/multer.interface';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { cloudFileUpload, fileValidation } from 'src/common/utils/multer';
+import { profileResponse } from './entities/user.entity';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
-  @UseInterceptors(preferredLanguageInterceptor)
-  @Auth([RoleEnum.admin, RoleEnum.user])
-  @Get()
-  profile(
-    @Headers() header: any,
-    @User() user: UserDocument,
-  ): {
-    message: string;
-  } {
-    console.log({
-      lang: header['accept-language'],
-      user,
-    });
-    return { message: 'Done' };
-  }
 
 
 
@@ -58,9 +36,9 @@ export class UserController {
     
     @UploadedFile
     (ParseFilePipe) 
-  file: Express.Multer.File):Promise<{message:string;data:{profile:IUser}}> {
+  file: Express.Multer.File):Promise<IResponse<profileResponse>> {
     const profile=await this.userService.profileImage(file,user)
-    return { message: 'Done', data:{profile} };
+    return successResponse<profileResponse>({data:{profile}})
   }
 
 
