@@ -8,7 +8,6 @@ import { UserModule } from './modules/user/user.module';
 import { CategoryModule } from './modules/category/category.module';
 import { ProductModule } from './modules/product/product.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { SharedAuthenticationModule } from './common/modules/auth.module';
 import { S3Service } from './common';
 
 @Module({
@@ -20,7 +19,6 @@ import { S3Service } from './common';
     MongooseModule.forRoot(process.env.DB_URI as string, {
       serverSelectionTimeoutMS: 30000,
     }),
-    SharedAuthenticationModule,
     AuthenticationModule,
     UserModule,
     CategoryModule,

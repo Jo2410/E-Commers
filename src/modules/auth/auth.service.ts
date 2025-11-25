@@ -31,7 +31,7 @@ export class AuthenticationService {
     private readonly userRepository: UserRepository,
     private readonly otpRepository: OtpRepository,
     private readonly securityService: securityService,
-    private readonly tokenService: TokenService,
+    private readonly tokenService: TokenService
   ) {}
 
   private async createConfirmEmailOtp(userId: Types.ObjectId) {

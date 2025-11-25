@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
+import { SharedAuthenticationModule } from './common/modules/auth.module';
 describe('AppController', () => {
   let appController: AppController;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
+      imports: [SharedAuthenticationModule],
       controllers: [AppController],
       providers: [AppService],
     }).compile();

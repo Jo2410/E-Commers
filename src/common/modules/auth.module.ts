@@ -7,10 +7,11 @@ import {
 } from 'src/DB';
 import { JwtService } from '@nestjs/jwt';
 import { TokenService } from 'src/common/utils/security/token.service';
+import { BrandModule } from 'src/modules/brand/brand.module';
 
 @Global()
 @Module({
-  imports: [UserModel, TokenModel],
+  imports: [UserModel, TokenModel, BrandModule],
   controllers: [],
   providers: [
     UserRepository,
