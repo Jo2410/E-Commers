@@ -9,6 +9,7 @@ export interface IBrand {
     slogan:string;
 
     createdBy:Types.ObjectId|IUser;
+    updatedBy?:Types.ObjectId|IUser;
     createdAt?:Date;
     updatedAt?:Date;
 }

@@ -5,7 +5,7 @@ import {
   SchemaFactory,
 } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { IBrand } from 'src/common';
+import { IBrand, IUser } from 'src/common';
 import slugify from 'slugify';
 
 @Schema()
@@ -24,8 +24,10 @@ export class Brand implements IBrand {
   slogan: string;
   @Prop({ type: String, required: true })
   image: string;
-  @Prop({ Type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   createdBy: Types.ObjectId;
+  @Prop({type:Types.ObjectId,ref:'User'})
+  updatedBy: Types.ObjectId | IUser;
 }
 
 export type BrandDocument = HydratedDocument<Brand>;
@@ -36,7 +38,7 @@ brandSchema.pre(
     next,
   ) {
     if (this.isModified('name')) {
-      this.slug=slugify(this.slug)
+      this.slug=slugify(this.name)
     }
     next();
   },
