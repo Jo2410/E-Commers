@@ -9,6 +9,8 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseFilePipe,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { BrandService } from './brand.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
@@ -18,8 +20,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { cloudFileUpload, fileValidation } from 'src/common/utils/multer';
 import { BrandResponse } from './entities/brand.entity';
 import { endpoint } from './authorization.module';
+import { BrandParamsDto, UpdateBrandDto } from './dto/update-brand.dto';
 // import { UpdateBrandDto } from './dto/update-brand.dto';
 
+@UsePipes(new ValidationPipe({whitelist:true,forbidNonWhitelisted:true}))
 @Controller('brand')
 export class BrandController {
   constructor(private readonly brandService: BrandService) {}
@@ -36,8 +40,8 @@ export class BrandController {
     @User() user: UserDocument,
     @Body() createBrandDto: CreateBrandDto,
     @UploadedFile(ParseFilePipe) file: Express.Multer.File,
-  ):Promise<IResponse<BrandResponse>> {
-    const brand = await this.brandService.create(createBrandDto,file,user);
+  ): Promise<IResponse<BrandResponse>> {
+    const brand = await this.brandService.create(createBrandDto, file, user);
     return successResponse<BrandResponse>({ status: 201, data: { brand } });
   }
 
@@ -51,10 +55,13 @@ export class BrandController {
     return this.brandService.findOne(+id);
   }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateBrandDto: UpdateBrandDto) {
-  //   return this.brandService.update(+id, updateBrandDto);
-  // }
+  @Patch(':brandId')
+  update(
+    @Param() params: BrandParamsDto,
+    @Body() updateBrandDto: UpdateBrandDto,
+  ) {
+    return this.brandService.update(params.brandId, updateBrandDto);
+  }
 
   @Delete(':id')
   remove(@Param('id') id: string) {

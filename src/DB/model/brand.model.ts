@@ -28,6 +28,12 @@ export class Brand implements IBrand {
   createdBy: Types.ObjectId;
   @Prop({type:Types.ObjectId,ref:'User'})
   updatedBy: Types.ObjectId | IUser;
+
+  @Prop({type:Date})
+   freezedAt?: Date;
+   @Prop({type:Date})
+   restoredAt?: Date;
+   
 }
 
 export type BrandDocument = HydratedDocument<Brand>;

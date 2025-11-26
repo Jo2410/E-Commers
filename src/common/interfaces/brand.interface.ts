@@ -12,4 +12,7 @@ export interface IBrand {
     updatedBy?:Types.ObjectId|IUser;
     createdAt?:Date;
     updatedAt?:Date;
+    
+    freezedAt?:Date;
+    restoredAt?:Date;
 }

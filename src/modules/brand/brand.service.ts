@@ -2,6 +2,8 @@ import { BadRequestException, ConflictException, Injectable } from '@nestjs/comm
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { BrandDocument, BrandRepository, UserDocument } from 'src/DB';
 import { S3Service } from 'src/common';
+import { Types } from 'mongoose';
+import { UpdateBrandDto } from './dto/update-brand.dto';
 // import { UpdateBrandDto } from './dto/update-brand.dto';
 
 @Injectable()
@@ -37,6 +39,10 @@ export class BrandService {
     return brand;
   }
 
+  update(brandId: Types.ObjectId, updateBrandDto: UpdateBrandDto) {
+    return `This action updates a #${brandId} brand`;
+  }
+
   findAll() {
     return `This action returns all brand`;
   }
@@ -45,9 +51,7 @@ export class BrandService {
     return `This action returns a #${id} brand`;
   }
 
-  // update(id: number, updateBrandDto: UpdateBrandDto) {
-  //   return `This action updates a #${id} brand`;
-  // }
+
 
   remove(id: number) {
     return `This action removes a #${id} brand`;
