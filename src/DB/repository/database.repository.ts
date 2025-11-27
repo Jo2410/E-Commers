@@ -23,7 +23,7 @@ export abstract class DatabaseRepository<TRawDocument,TDocument=HydratedDocument
   async find({
     filter,
     select,
-    options,
+    options={new:true},
   }: {
     filter?: RootFilterQuery<TRawDocument>;
     select?: ProjectionType<TRawDocument>;

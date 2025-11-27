@@ -23,7 +23,7 @@ import { endpoint } from './authorization.module';
 import { BrandParamsDto, UpdateBrandDto } from './dto/update-brand.dto';
 // import { UpdateBrandDto } from './dto/update-brand.dto';
 
-@UsePipes(new ValidationPipe({whitelist:true,forbidNonWhitelisted:true}))
+@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @Controller('brand')
 export class BrandController {
   constructor(private readonly brandService: BrandService) {}
@@ -55,12 +55,40 @@ export class BrandController {
     return this.brandService.findOne(+id);
   }
 
+  @Auth(endpoint.create)
   @Patch(':brandId')
-  update(
+  async update(
     @Param() params: BrandParamsDto,
     @Body() updateBrandDto: UpdateBrandDto,
-  ) {
-    return this.brandService.update(params.brandId, updateBrandDto);
+    @User() user: UserDocument,
+  ): Promise<IResponse<BrandResponse>> {
+    const brand = await this.brandService.update(
+      params.brandId,
+      updateBrandDto,
+      user,
+    );
+    return successResponse<BrandResponse>({ data: { brand } });
+  }
+
+  @UseInterceptors(
+    FileInterceptor(
+      'attachment',
+      cloudFileUpload({ validation: fileValidation.image }),
+    ),
+  )
+  @Auth(endpoint.create)
+  @Patch(':brandId/attachment')
+  async updateAttachment(
+    @Param() params: BrandParamsDto,
+    @UploadedFile() file: Express.Multer.File,
+    @User() user: UserDocument,
+  ): Promise<IResponse<BrandResponse>> {
+    const brand = await this.brandService.updateAttachment(
+      params.brandId,
+      file,
+      user,
+    );
+    return successResponse<BrandResponse>({ data: { brand } });
   }
 
   @Delete(':id')

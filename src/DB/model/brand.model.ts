@@ -4,11 +4,11 @@ import {
   Schema,
   SchemaFactory,
 } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, Types, UpdateQuery } from 'mongoose';
 import { IBrand, IUser } from 'src/common';
 import slugify from 'slugify';
 
-@Schema()
+@Schema({timestamps:true,strictQuery:true})
 export class Brand implements IBrand {
   @Prop({
     type: String,
@@ -38,6 +38,7 @@ export class Brand implements IBrand {
 
 export type BrandDocument = HydratedDocument<Brand>;
 const brandSchema = SchemaFactory.createForClass(Brand);
+
 brandSchema.pre(
   'save',
   async function (
@@ -49,6 +50,50 @@ brandSchema.pre(
     next();
   },
 );
+
+
+brandSchema.pre(
+  ['updateOne','findOneAndUpdate'],
+  async function (
+    next,
+  ) {
+    const update=this.getUpdate() as UpdateQuery<BrandDocument>
+
+    if (update.name) {
+      this.setUpdate({...update,slug:slugify(update.name)})
+    }
+
+    const query=this.getQuery();
+    if (query.paranoId===false) {
+      this.setQuery({...query})
+    }
+    else{
+      this.setQuery({...query,freezedAt:{$exists:false}})
+    }
+
+    next();
+  },
+);
+
+
+brandSchema.pre(
+  ['findOne','find'],
+  async function (
+    next,
+  ) {
+
+    const query=this.getQuery();
+    if (query.paranoId===false) {
+      this.setQuery({...query})
+    }
+    else{
+      this.setQuery({...query,freezedAt:{$exists:false}})
+    }
+
+    next();
+  },
+);
+
 
 
 export const BrandModel = MongooseModule.forFeature([
