@@ -64,7 +64,7 @@ brandSchema.pre(
     }
 
     const query=this.getQuery();
-    if (query.paranoId===false) {
+    if (query.paranoid===false) {
       this.setQuery({...query})
     }
     else{
@@ -83,7 +83,7 @@ brandSchema.pre(
   ) {
 
     const query=this.getQuery();
-    if (query.paranoId===false) {
+    if (query.paranoid===false) {
       this.setQuery({...query})
     }
     else{

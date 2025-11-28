@@ -25,10 +25,14 @@ export class BrandService {
   ): Promise<BrandDocument> {
     const { name, slogan } = createBrandDto;
     const checkDuplicated = await this.brandRepository.findOne({
-      filter: { name },
+      filter: { name, paranoid: false },
     });
     if (checkDuplicated) {
-      throw new ConflictException('Duplicated brand name');
+      throw new ConflictException(
+        checkDuplicated.freezedAt
+          ? 'Duplicated with archived brand'
+          : 'Duplicated brand name',
+      );
     }
 
     const image = await this.s3Service.uploadFile({
@@ -92,16 +96,67 @@ export class BrandService {
         image,
         updatedBy: user._id,
       },
-      options:{new:false}
+      options: { new: false },
     });
 
     if (!brand) {
-      await this.s3Service.deleteFile({Key:image})
+      await this.s3Service.deleteFile({ Key: image });
       throw new NotFoundException('Fail to find matching brand instance ');
     }
 
-    await this.s3Service.deleteFile({Key:brand.image})
-    brand.image=image;
+    await this.s3Service.deleteFile({ Key: brand.image });
+    brand.image = image;
+    return brand;
+  }
+
+  async freeze(brandId: Types.ObjectId, user: UserDocument): Promise<string> {
+    const brand = await this.brandRepository.findOneAndUpdate({
+      filter: { _id: brandId },
+      update: {
+        freezedAt: new Date(),
+        $unset: { restoredAt: true },
+        updatedBy: user._id,
+      },
+      options: { new: false },
+    });
+
+    if (!brand) {
+      throw new NotFoundException('Fail to find matching brand instance ');
+    }
+
+    return 'Done';
+  }
+
+  async remove(brandId: Types.ObjectId, user: UserDocument): Promise<string> {
+    const brand = await this.brandRepository.findOneAndDelete({
+      filter: { _id: brandId, paranoid: false, freezedAt: { $exists: true } },
+    });
+
+    if (!brand) {
+      throw new NotFoundException('Fail to find matching brand instance ');
+    }
+    await this.s3Service.deleteFile({ Key: brand.image });
+    return 'Done';
+  }
+
+  async restore(
+    brandId: Types.ObjectId,
+    user: UserDocument,
+  ): Promise<BrandDocument | lean<BrandDocument>> {
+    const brand = await this.brandRepository.findOneAndUpdate({
+      filter: { _id: brandId, paranoid: false, freezedAt: { $exists: true } },
+      update: {
+        restoredAt: new Date(),
+        $unset: { freezedAt: true },
+        updatedBy: user._id,
+      },
+      options: { new: false },
+    });
+
+    if (!brand) {
+      throw new NotFoundException('Fail to find matching brand instance ');
+    }
+
     return brand;
   }
 
@@ -111,9 +166,5 @@ export class BrandService {
 
   findOne(id: number) {
     return `This action returns a #${id} brand`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} brand`;
   }
 }

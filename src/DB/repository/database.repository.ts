@@ -14,16 +14,18 @@ import {
   UpdateWriteOpResult,
 } from 'mongoose';
 
-export type lean<T> =FlattenMaps<T>;
+export type lean<T> = FlattenMaps<T>;
 
-
-export abstract class DatabaseRepository<TRawDocument,TDocument=HydratedDocument<TRawDocument>> {
+export abstract class DatabaseRepository<
+  TRawDocument,
+  TDocument = HydratedDocument<TRawDocument>,
+> {
   constructor(protected model: Model<TDocument>) {}
 
   async find({
     filter,
     select,
-    options={new:true},
+    options = { new: true },
   }: {
     filter?: RootFilterQuery<TRawDocument>;
     select?: ProjectionType<TRawDocument>;
@@ -104,7 +106,7 @@ export abstract class DatabaseRepository<TRawDocument,TDocument=HydratedDocument
     let docsCount: number | undefined = undefined;
     let pages: number | undefined = undefined;
     if (page !== 'all') {
-      page = Math.floor(!page||page < 1 ? 1 : page);
+      page = Math.floor(!page || page < 1 ? 1 : page);
       options.limit = Math.floor(size < 1 || !size ? 5 : size);
       options.skip = (page - 1) * options.limit;
 
@@ -185,6 +187,14 @@ export abstract class DatabaseRepository<TRawDocument,TDocument=HydratedDocument
       { ...update, $inc: { __v: 1 } },
       options,
     );
+  }
+
+  async findOneAndDelete({
+    filter,
+  }: {
+    filter?: RootFilterQuery<TRawDocument>;
+  }): Promise<HydratedDocument<TDocument> | lean<TDocument> | null> {
+    return await this.model.findOneAndDelete(filter || {});
   }
 
   async deleteOne({
