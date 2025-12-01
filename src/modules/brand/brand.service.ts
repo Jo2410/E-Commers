@@ -8,7 +8,7 @@ import { CreateBrandDto } from './dto/create-brand.dto';
 import { BrandDocument, BrandRepository, UserDocument } from 'src/DB';
 import { FolderEnum, S3Service } from 'src/common';
 import { Types } from 'mongoose';
-import { UpdateBrandDto } from './dto/update-brand.dto';
+import { GetAllDto, UpdateBrandDto } from './dto/update-brand.dto';
 import { lean } from 'src/DB/repository/database.repository';
 // import { UpdateBrandDto } from './dto/update-brand.dto';
 
@@ -160,8 +160,30 @@ export class BrandService {
     return brand;
   }
 
-  findAll() {
-    return `This action returns all brand`;
+  async findAll(data: GetAllDto):Promise<{
+        docsCount?:number,
+        limit?:number,
+        pages?:number,
+        currentPage?:number |undefined ,
+        result:BrandDocument[]|lean<BrandDocument>[],
+      }> {
+    const { page, size, search } = data;
+    const result = await this.brandRepository.paginate({
+      filter: {
+        ...(search
+          ? {
+              $or: [
+                { name: { $regex: search, $options: 'i' } },
+                { slug: { $regex: search, $options: 'i' } },
+                { slogan: { $regex: search, $options: 'i' } },
+              ],
+            }
+          : {}),
+      },
+      page,
+      size,
+    });
+    return result;
   }
 
   findOne(id: number) {

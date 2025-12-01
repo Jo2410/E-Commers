@@ -11,6 +11,7 @@ import {
   ParseFilePipe,
   UsePipes,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { BrandService } from './brand.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
@@ -18,9 +19,9 @@ import { Auth, IResponse, successResponse, User } from 'src/common';
 import type { UserDocument } from 'src/DB';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { cloudFileUpload, fileValidation } from 'src/common/utils/multer';
-import { BrandResponse } from './entities/brand.entity';
+import { BrandResponse, GetAllResponse } from './entities/brand.entity';
 import { endpoint } from './authorization.module';
-import { BrandParamsDto, UpdateBrandDto } from './dto/update-brand.dto';
+import { BrandParamsDto, GetAllDto, UpdateBrandDto } from './dto/update-brand.dto';
 
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @Controller('brand')
@@ -45,8 +46,9 @@ export class BrandController {
   }
 
   @Get()
-  findAll() {
-    return this.brandService.findAll();
+  async findAll(@Query() query:GetAllDto):Promise<IResponse<GetAllResponse>> {
+    const result=await this.brandService.findAll(query);
+    return successResponse<GetAllResponse>({data:{result}})
   }
 
   @Get(':id')
@@ -117,4 +119,6 @@ export class BrandController {
     await this.brandService.remove(params.brandId,user);
     return successResponse()
   }
+
+  
 }

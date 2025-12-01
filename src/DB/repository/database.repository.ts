@@ -102,7 +102,13 @@ export abstract class DatabaseRepository<
     options?: QueryOptions<TDocument>;
     page?: number | 'all';
     size?: number;
-  }): Promise<HydratedDocument<TDocument>[] | [] | lean<TDocument>[] | any> {
+  }): Promise<{
+      docsCount?:number,
+      limit?:number,
+      pages?:number,
+      currentPage?:number |undefined ,
+      result:TDocument[]|lean<TDocument>[],
+    }> {
     let docsCount: number | undefined = undefined;
     let pages: number | undefined = undefined;
     if (page !== 'all') {
