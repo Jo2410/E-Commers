@@ -160,13 +160,16 @@ export class BrandService {
     return brand;
   }
 
-  async findAll(data: GetAllDto):Promise<{
-        docsCount?:number,
-        limit?:number,
-        pages?:number,
-        currentPage?:number |undefined ,
-        result:BrandDocument[]|lean<BrandDocument>[],
-      }> {
+  async findAll(
+    data: GetAllDto,
+    archive: boolean = false,
+  ): Promise<{
+    docsCount?: number;
+    limit?: number;
+    pages?: number;
+    currentPage?: number | undefined;
+    result: BrandDocument[] | lean<BrandDocument>[];
+  }> {
     const { page, size, search } = data;
     const result = await this.brandRepository.paginate({
       filter: {
@@ -179,6 +182,7 @@ export class BrandService {
               ],
             }
           : {}),
+        ...(archive ? { paranoid: false, freezedAt: { $exists: true } } : {}),
       },
       page,
       size,
@@ -186,7 +190,21 @@ export class BrandService {
     return result;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} brand`;
+  async findOne(
+    brandId: Types.ObjectId,
+    archive: boolean = false,
+  ): Promise<BrandDocument|lean<BrandDocument>> {
+    const brand = await this.brandRepository.findOne({
+      filter:{
+        _id:brandId,
+      
+         ...(archive ? { paranoid: false, freezedAt: { $exists: true } } : {}),
+      },
+  })
+
+  if (!brand) {
+    throw new NotFoundException('Fail to finds matching brand instance')
   }
+  return brand
+}
 }

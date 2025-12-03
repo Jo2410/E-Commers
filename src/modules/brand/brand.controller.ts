@@ -21,7 +21,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { cloudFileUpload, fileValidation } from 'src/common/utils/multer';
 import { BrandResponse, GetAllResponse } from './entities/brand.entity';
 import { endpoint } from './authorization.module';
-import { BrandParamsDto, GetAllDto, UpdateBrandDto } from './dto/update-brand.dto';
+import {
+  BrandParamsDto,
+  GetAllDto,
+  UpdateBrandDto,
+} from './dto/update-brand.dto';
 
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @Controller('brand')
@@ -46,14 +50,31 @@ export class BrandController {
   }
 
   @Get()
-  async findAll(@Query() query:GetAllDto):Promise<IResponse<GetAllResponse>> {
-    const result=await this.brandService.findAll(query);
-    return successResponse<GetAllResponse>({data:{result}})
+  async findAll(@Query() query: GetAllDto): Promise<IResponse<GetAllResponse>> {
+    const result = await this.brandService.findAll(query);
+    return successResponse<GetAllResponse>({ data: { result } });
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.brandService.findOne(+id);
+  @Auth(endpoint.create)
+  @Get('/archive')
+  async findAllArchives(
+    @Query() query: GetAllDto,
+  ): Promise<IResponse<GetAllResponse>> {
+    const result = await this.brandService.findAll(query,true);
+    return successResponse<GetAllResponse>({ data: { result } });
+  }
+
+  @Get(':brandId')
+  async findOne(@Param() params: BrandParamsDto) {
+    const brand= await this.brandService.findOne(params.brandId);
+    return successResponse<BrandResponse>({data:{brand}})
+  }
+
+  @Auth(endpoint.create)
+  @Get(':brandId/archive')
+  async findOneArchive(@Param() params: BrandParamsDto) {
+    const brand= await this.brandService.findOne(params.brandId,true);
+    return successResponse<BrandResponse>({data:{brand}})
   }
 
   @Auth(endpoint.create)
@@ -114,11 +135,8 @@ export class BrandController {
 
   @Auth(endpoint.create)
   @Delete(':brandId')
-  async remove(@Param() params: BrandParamsDto,
-   @User() user: UserDocument) {
-    await this.brandService.remove(params.brandId,user);
-    return successResponse()
+  async remove(@Param() params: BrandParamsDto, @User() user: UserDocument) {
+    await this.brandService.remove(params.brandId, user);
+    return successResponse();
   }
-
-  
 }
