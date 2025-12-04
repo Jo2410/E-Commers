@@ -1,13 +1,153 @@
-import { Controller, Get } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  Query,
+} from '@nestjs/common';
 import { CategoryService } from './category.service';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import {
+  CategoryParamsDto,
+  GetAllDto,
+  UpdateCategoryDto,
+} from './dto/update-category.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { cloudFileUpload, fileValidation } from 'src/common/utils/multer';
+import { Auth, IResponse, successResponse, User } from 'src/common';
+import { endpoint } from './category.authorization';
+import type { UserDocument } from 'src/DB';
+import { CategoryResponse, GetAllResponse } from './entities/category.entity';
+
 
 @Controller('category')
 export class CategoryController {
-    constructor(private readonly categoryService:CategoryService){}
+  constructor(private readonly categoryService: CategoryService) {}
 
-    @Get()
-    categories(){
-        const categories=this.categoryService.categories()
-        return {message:"Done",data:{categories}}
-    }
+  @UseInterceptors(
+    FileInterceptor(
+      'attachment', //=>Key
+      cloudFileUpload({ validation: fileValidation.image }),
+    ),
+  )
+  @Auth(endpoint.create)
+  @Post()
+  async create(
+    @User() user: UserDocument,
+    @Body() createCategoryDto: CreateCategoryDto,
+    @UploadedFile(ParseFilePipe) file: Express.Multer.File,
+  ): Promise<IResponse<CategoryResponse>> {
+    const category = await this.categoryService.create(
+      createCategoryDto,
+      file,
+      user,
+    );
+    return successResponse<CategoryResponse>({
+      status: 201,
+      data: { category },
+    });
+  }
+
+  @Get()
+  async findAll(@Query() query: GetAllDto): Promise<IResponse<GetAllResponse>> {
+    const result = await this.categoryService.findAll(query);
+    return successResponse<GetAllResponse>({ data: { result } });
+  }
+
+  @Auth(endpoint.create)
+  @Get('/archive')
+  async findAllArchives(
+    @Query() query: GetAllDto,
+  ): Promise<IResponse<GetAllResponse>> {
+    const result = await this.categoryService.findAll(query, true);
+    return successResponse<GetAllResponse>({ data: { result } });
+  }
+
+  @Get(':categoryId')
+  async findOne(@Param() params: CategoryParamsDto) {
+    const category = await this.categoryService.findOne(params.categoryId);
+    return successResponse<CategoryResponse>({ data: { category } });
+  }
+
+  @Auth(endpoint.create)
+  @Get(':categoryId/archive')
+  async findOneArchive(@Param() params: CategoryParamsDto) {
+    const category = await this.categoryService.findOne(
+      params.categoryId,
+      true,
+    );
+    return successResponse<CategoryResponse>({ data: { category } });
+  }
+
+  @Auth(endpoint.create)
+  @Patch(':categoryId')
+  async update(
+    @Param() params: CategoryParamsDto,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+    @User() user: UserDocument,
+  ): Promise<IResponse<CategoryResponse>> {
+    const category = await this.categoryService.update(
+      params.categoryId,
+      updateCategoryDto,
+      user,
+    );
+    return successResponse<CategoryResponse>({ data: { category } });
+  }
+
+  @UseInterceptors(
+    FileInterceptor(
+      'attachment',
+      cloudFileUpload({ validation: fileValidation.image }),
+    ),
+  )
+  @Auth(endpoint.create)
+  @Patch(':categoryId/attachment')
+  async updateAttachment(
+    @Param() params: CategoryParamsDto,
+    @UploadedFile() file: Express.Multer.File,
+    @User() user: UserDocument,
+  ): Promise<IResponse<CategoryResponse>> {
+    const category = await this.categoryService.updateAttachment(
+      params.categoryId,
+      file,
+      user,
+    );
+    return successResponse<CategoryResponse>({ data: { category } });
+  }
+
+  @Auth(endpoint.create)
+  @Patch(':categoryId/restore')
+  async restore(
+    @Param() params: CategoryParamsDto,
+    @User() user: UserDocument,
+  ): Promise<IResponse<CategoryResponse>> {
+    const category = await this.categoryService.restore(
+      params.categoryId,
+      user,
+    );
+    return successResponse<CategoryResponse>({ data: { category } });
+  }
+
+  @Auth(endpoint.create)
+  @Delete(':categoryId/freeze')
+  async freeze(
+    @Param() params: CategoryParamsDto,
+    @User() user: UserDocument,
+  ): Promise<IResponse> {
+    await this.categoryService.freeze(params.categoryId, user);
+    return successResponse();
+  }
+
+  @Auth(endpoint.create)
+  @Delete(':categoryId')
+  async remove(@Param() params: CategoryParamsDto, @User() user: UserDocument) {
+    await this.categoryService.remove(params.categoryId, user);
+    return successResponse();
+  }
 }

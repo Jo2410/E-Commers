@@ -20,7 +20,7 @@ import type { UserDocument } from 'src/DB';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { cloudFileUpload, fileValidation } from 'src/common/utils/multer';
 import { BrandResponse, GetAllResponse } from './entities/brand.entity';
-import { endpoint } from './authorization.module';
+import { endpoint } from './brand.authorization';
 import {
   BrandParamsDto,
   GetAllDto,
