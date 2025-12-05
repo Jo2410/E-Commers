@@ -270,7 +270,7 @@ export class CategoryService {
               $or: [
                 { name: { $regex: search, $options: 'i' } },
                 { slug: { $regex: search, $options: 'i' } },
-                { slogan: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
               ],
             }
           : {}),
