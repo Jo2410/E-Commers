@@ -83,7 +83,7 @@ export class CategoryService {
   }
 
   async update(
-    CategoryId: Types.ObjectId,
+    categoryId: Types.ObjectId,
     updateCategoryDto: UpdateCategoryDto,
     user: UserDocument,
   ): Promise<CategoryDocument | lean<CategoryDocument>> {
@@ -96,12 +96,53 @@ export class CategoryService {
       throw new ConflictException('Duplicated Category name ');
     }
 
+    const brands: Types.ObjectId[] = [
+      ...new Set(updateCategoryDto.brands || []),
+    ];
+
+    if (
+      brands &&
+      (await this.brandRepository.find({ filter: { _id: { $in: brands } } }))
+        .length != brands.length
+    ) {
+      throw new NotFoundException('some of mentioned brands does not exist');
+    }
+
+    const removeBrands=updateCategoryDto.brands?? [];
+    delete updateCategoryDto.removeBrands;
+
     const Category = await this.CategoryRepository.findOneAndUpdate({
-      filter: { _id: CategoryId },
-      update: {
-        ...updateCategoryDto,
-        updatedBy: user._id,
-      },
+      filter: { _id: categoryId },
+      update: [
+        {
+          $set: {
+            ...updateCategoryDto,
+            updatedBy: user._id,
+            brands: {
+              $setUnion: [
+                {
+                  $setDifference: [
+                    '$brands',
+                    (removeBrands || []).map(
+                      (brand) => {
+                        return Types.ObjectId.createFromHexString(
+                          brand as unknown as string,
+                        );
+                      },
+
+                      brands.map((brand) => {
+                        return Types.ObjectId.createFromHexString(
+                          brand as unknown as string,
+                        );
+                      }),
+                    ),
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ],
     });
 
     if (!Category) {
@@ -112,7 +153,7 @@ export class CategoryService {
   }
 
   async updateAttachment(
-    CategoryId: Types.ObjectId,
+    categoryId: Types.ObjectId,
     file: Express.Multer.File,
     user: UserDocument,
   ): Promise<CategoryDocument | lean<CategoryDocument>> {
@@ -121,7 +162,7 @@ export class CategoryService {
       path: FolderEnum.Category,
     });
     const Category = await this.CategoryRepository.findOneAndUpdate({
-      filter: { _id: CategoryId },
+      filter: { _id: categoryId },
       update: {
         image,
         updatedBy: user._id,
@@ -140,11 +181,11 @@ export class CategoryService {
   }
 
   async freeze(
-    CategoryId: Types.ObjectId,
+    categoryId: Types.ObjectId,
     user: UserDocument,
   ): Promise<string> {
     const Category = await this.CategoryRepository.findOneAndUpdate({
-      filter: { _id: CategoryId },
+      filter: { _id: categoryId },
       update: {
         freezedAt: new Date(),
         $unset: { restoredAt: true },
@@ -161,12 +202,12 @@ export class CategoryService {
   }
 
   async remove(
-    CategoryId: Types.ObjectId,
+    categoryId: Types.ObjectId,
     user: UserDocument,
   ): Promise<string> {
     const Category = await this.CategoryRepository.findOneAndDelete({
       filter: {
-        _id: CategoryId,
+        _id: categoryId,
         paranoid: false,
         freezedAt: { $exists: true },
       },
@@ -180,12 +221,12 @@ export class CategoryService {
   }
 
   async restore(
-    CategoryId: Types.ObjectId,
+    categoryId: Types.ObjectId,
     user: UserDocument,
   ): Promise<CategoryDocument | lean<CategoryDocument>> {
     const Category = await this.CategoryRepository.findOneAndUpdate({
       filter: {
-        _id: CategoryId,
+        _id: categoryId,
         paranoid: false,
         freezedAt: { $exists: true },
       },
@@ -235,12 +276,12 @@ export class CategoryService {
   }
 
   async findOne(
-    CategoryId: Types.ObjectId,
+    categoryId: Types.ObjectId,
     archive: boolean = false,
   ): Promise<CategoryDocument | lean<CategoryDocument>> {
     const Category = await this.CategoryRepository.findOne({
       filter: {
-        _id: CategoryId,
+        _id: categoryId,
 
         ...(archive ? { paranoid: false, freezedAt: { $exists: true } } : {}),
       },

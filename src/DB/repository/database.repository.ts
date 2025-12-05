@@ -156,6 +156,16 @@ export abstract class DatabaseRepository<
     update: UpdateQuery<TDocument>;
     options?: MongooseUpdateQueryOptions<TDocument> | null;
   }): Promise<UpdateWriteOpResult> {
+
+    if (Array.isArray(update)){
+      update.push({
+        $set:{
+          __v:{$add:['$__v',1]},
+        },
+      });
+      return await this.model.updateOne(filter || {},update,options)
+    }
+
     return await this.model.updateOne(
       filter,
       { ...update, $inc: { __v: 1 } },
@@ -188,8 +198,18 @@ export abstract class DatabaseRepository<
     update?: UpdateQuery<TDocument>;
     options?: QueryOptions<TDocument> | null;
   }): Promise<HydratedDocument<TDocument> | lean<TDocument> | null> {
+    
+    if (Array.isArray(update)){
+      update.push({
+        $set:{
+          __v:{$add:['$__v',1]},
+        },
+      });
+      return await this.model.findOneAndUpdate(filter || {},update,options)
+    }
+    
     return await this.model.findOneAndUpdate(
-      filter,
+      filter||{},
       { ...update, $inc: { __v: 1 } },
       options,
     );

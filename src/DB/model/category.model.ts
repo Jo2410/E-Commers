@@ -8,7 +8,7 @@ import { HydratedDocument, Types, UpdateQuery } from 'mongoose';
 import { IBrand, ICategory, IUser } from 'src/common';
 import slugify from 'slugify';
 
-@Schema({timestamps:true,strictQuery:true})
+@Schema({timestamps:true,strictQuery:true,strict:true})
 export class Category implements ICategory {
   @Prop({
     type: String,
