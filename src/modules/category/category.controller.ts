@@ -10,6 +10,8 @@ import {
   UploadedFile,
   ParseFilePipe,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -25,7 +27,7 @@ import { endpoint } from './category.authorization';
 import type { UserDocument } from 'src/DB';
 import { CategoryResponse, GetAllResponse } from './entities/category.entity';
 
-
+@UsePipes(new ValidationPipe({whitelist:true,forbidNonWhitelisted:true}))
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}

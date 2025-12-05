@@ -1,5 +1,6 @@
-import { IsString, MaxLength, MinLength } from "class-validator";
-import { ICategory } from "src/common";
+import { IsOptional, IsString, MaxLength, MinLength, Validate } from "class-validator";
+import { Types } from "mongoose";
+import { ICategory, mongoDBIds } from "src/common";
 
 export class CreateCategoryDto implements Partial<ICategory> {
 
@@ -8,10 +9,16 @@ export class CreateCategoryDto implements Partial<ICategory> {
     @IsString()
     name:string;
 
-    @MaxLength(25)
+
+    @MaxLength(5000)
     @MinLength(2)
     @IsString()
-    slogan:string;
+    @IsOptional()
+    description:string;
 
+
+    @Validate(mongoDBIds)
+    @IsOptional()
+    brands?: Types.ObjectId[];
 
 }

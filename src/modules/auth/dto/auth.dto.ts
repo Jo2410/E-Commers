@@ -8,7 +8,7 @@ import {
   MinLength,
   ValidateIf,
 } from 'class-validator';
-import { IsMatch } from 'src/common/decorators/match.custom.decorator';
+import { IsMatch } from 'src/common/decorators/match.decorator';
 
 
 
