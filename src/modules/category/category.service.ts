@@ -108,7 +108,7 @@ export class CategoryService {
       throw new NotFoundException('some of mentioned brands does not exist');
     }
 
-    const removeBrands=updateCategoryDto.brands?? [];
+    const removeBrands = updateCategoryDto.brands ?? [];
     delete updateCategoryDto.removeBrands;
 
     const Category = await this.CategoryRepository.findOneAndUpdate({
@@ -157,27 +157,34 @@ export class CategoryService {
     file: Express.Multer.File,
     user: UserDocument,
   ): Promise<CategoryDocument | lean<CategoryDocument>> {
+    const Category = await this.CategoryRepository.findOne({
+      filter: { _id: categoryId },
+    });
+
+    if (!Category) {
+      throw new NotFoundException('Fail to find matching Category instance ');
+    }
+
     const image = await this.s3Service.uploadFile({
       file,
-      path: FolderEnum.Category,
+      path: `${FolderEnum.Category}/${Category.assetFolderId}`,
     });
-    const Category = await this.CategoryRepository.findOneAndUpdate({
+
+    const updatedCategory = await this.CategoryRepository.findOneAndUpdate({
       filter: { _id: categoryId },
       update: {
         image,
         updatedBy: user._id,
       },
-      options: { new: false },
     });
 
-    if (!Category) {
+    if (!updatedCategory) {
       await this.s3Service.deleteFile({ Key: image });
       throw new NotFoundException('Fail to find matching Category instance ');
     }
 
     await this.s3Service.deleteFile({ Key: Category.image });
-    Category.image = image;
-    return Category;
+    return updatedCategory;
   }
 
   async freeze(
