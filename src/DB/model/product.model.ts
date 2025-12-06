@@ -13,16 +13,17 @@ export class Product implements IProduct {
   @Prop({
     type: String,
     required: true,
-    unique: true,
     minLength: 2,
-    maxLength: 25,
+    maxLength: 2000,
   })
   name: string;
   @Prop({ type: String, minlength: 2, maxLength: 50 })
   slug: string;
   @Prop({ type: String, minlength: 2, maxlength: 50000 })
   description: string;
-  @Prop({ type: String, required: true })
+  @Prop({type:String,required:true})
+  assetFolderId: string;
+  @Prop({ type: [String], required: true })
   images: string[];
   @Prop({type:Number,required:true,})
   salePrice: number;

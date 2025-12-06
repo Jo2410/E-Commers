@@ -14,6 +14,7 @@ export interface IProduct {
     originalPrice:number;
     discountPercent:number;
     salePrice:number;
+    assetFolderId:string;
 
     stock:number;
     soldItems:number;
