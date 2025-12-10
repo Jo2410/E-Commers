@@ -14,7 +14,11 @@ import {
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
-import { ProductParamDto, UpdateProductDto } from './dto/update-product.dto';
+import {
+  ProductParamDto,
+  UpdateProductAttachmentDto,
+  UpdateProductDto,
+} from './dto/update-product.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { cloudFileUpload, fileValidation } from 'src/common/utils/multer';
 import {
@@ -27,7 +31,6 @@ import {
 import { endpoint } from './authorization';
 import type { UserDocument } from 'src/DB';
 import { ProductResponse } from './entities/product.entity';
-
 
 @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
 @Controller('product')
@@ -62,12 +65,45 @@ export class ProductController {
 
   @Auth(endpoint.create)
   @Patch(':productId')
-  update(
+  async update(
     @Param() params: ProductParamDto,
     @Body() updateProductDto: UpdateProductDto,
-    @User() user:UserDocument,
-  ) {
-    return this.productService.update(params.productId, updateProductDto,user);
+    @User() user: UserDocument,
+  ):Promise<IResponse<ProductResponse>> {
+    const product = await this.productService.update(
+      params.productId,
+      updateProductDto,
+      user,
+    );
+    return successResponse<ProductResponse>({data:{product}})
+  }
+
+  @UseInterceptors(
+    FilesInterceptor(
+      'attachments',
+      5,
+      cloudFileUpload({
+        validation: fileValidation.image,
+        storageApproach: StorageEnum.disk,
+      }),
+    ),
+  )
+  @Auth(endpoint.create)
+  @Patch(':productId/attachment')
+  async updateAttachment(
+    @Param() params: ProductParamDto,
+    @Body() updateProductAttachmentDto: UpdateProductAttachmentDto,
+    @User() user: UserDocument,
+    @UploadedFiles(new ParseFilePipe({ fileIsRequired: false }))
+    files: Express.Multer.File[],
+  ):Promise<IResponse<ProductResponse>> {
+    const product = await this.productService.updateAttachment(
+      params.productId,
+      updateProductAttachmentDto,
+      user,
+      files,
+    );
+    return successResponse<ProductResponse>({ data: { product } });
   }
 
   @Get()

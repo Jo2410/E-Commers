@@ -181,7 +181,7 @@ export abstract class DatabaseRepository<
     id: Types.ObjectId | any;
     update?: UpdateQuery<TDocument>;
     options?: QueryOptions<TDocument> | null;
-  }): Promise<HydratedDocument<TDocument> | lean<TDocument> | null> {
+  }): Promise<HydratedDocument<TDocument> | null> {
     return await this.model.findByIdAndUpdate(
       id,
       { ...update, $inc: { __v: 1 } },
@@ -197,7 +197,7 @@ export abstract class DatabaseRepository<
     filter?: RootFilterQuery<TRawDocument>;
     update?: UpdateQuery<TDocument>;
     options?: QueryOptions<TDocument> | null;
-  }): Promise<HydratedDocument<TDocument> | lean<TDocument> | null> {
+  }): Promise<HydratedDocument<TDocument> | null> {
     
     if (Array.isArray(update)){
       update.push({
@@ -219,7 +219,7 @@ export abstract class DatabaseRepository<
     filter,
   }: {
     filter?: RootFilterQuery<TRawDocument>;
-  }): Promise<HydratedDocument<TDocument> | lean<TDocument> | null> {
+  }): Promise<HydratedDocument<TDocument> | null> {
     return await this.model.findOneAndDelete(filter || {});
   }
 

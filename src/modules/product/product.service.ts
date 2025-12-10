@@ -4,9 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import {
+  UpdateProductAttachmentDto,
+  UpdateProductDto,
+} from './dto/update-product.dto';
 import {
   BrandRepository,
+  CategoryDocument,
   CategoryRepository,
   ProductDocument,
   UserDocument,
@@ -83,8 +87,7 @@ export class ProductService {
     productId: Types.ObjectId,
     updateProductDto: UpdateProductDto,
     user: UserDocument,
-  ) {
-
+  ):Promise<ProductDocument> {
     const product = await this.productRepository.findOne({
       filter: { _id: productId },
     });
@@ -125,16 +128,74 @@ export class ProductService {
 
     const updateProduct = await this.productRepository.findOneAndUpdate({
       filter: { _id: productId },
-      update:{
+      update: {
         ...updateProductDto,
         salePrice,
-        updatedBy:user._id
-      }
+        updatedBy: user._id,
+      },
     });
 
     if (!updateProduct) {
       throw new BadRequestException('Fail to update this product instance');
     }
+
+    return updateProduct;
+  }
+
+  async updateAttachment(
+    productId: Types.ObjectId,
+    updateProductAttachmentDto: UpdateProductAttachmentDto,
+    user: UserDocument,
+    files?: Express.Multer.File[],
+  ):Promise<ProductDocument>{
+    const product = await this.productRepository.findOne({
+      filter: { _id: productId },
+    });
+    if (!product) {
+      throw new NotFoundException('Fail to find matching product instance');
+    }
+
+    let attachments: string[] = [];
+    if (files?.length) {
+      attachments = await this.s3service.uploadFiles({
+        files,
+        path: `${(FolderEnum.Category as unknown as CategoryDocument).assetFolderId}/${FolderEnum.Product}/${product.assetFolderId}`,
+      });
+    }
+
+    const removeAttachments=[... new Set(updateProductAttachmentDto.removeAttachments??[])]
+
+
+
+    const updateProduct = await this.productRepository.findOneAndUpdate({
+      filter: { _id: productId },
+      update: [
+        {
+          $set:{
+            updatedBy:user._id,
+            images:{
+              $setUnion:[
+                {
+                  $setDifference:[
+                    "$images",
+                    removeAttachments
+                  ]
+                },
+                attachments
+              ]
+            }
+          }
+        }
+      ],
+    });
+
+    
+
+    if (!updateProduct) {
+      await this.s3service.deleteFiles({urls:attachments})
+      throw new BadRequestException('Fail to update this product instance');
+    }
+    await this.s3service.deleteFiles({urls:removeAttachments})
 
     return updateProduct;
   }
