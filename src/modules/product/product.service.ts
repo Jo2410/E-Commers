@@ -10,15 +10,15 @@ import {
 } from './dto/update-product.dto';
 import {
   BrandRepository,
-  CategoryDocument,
-  CategoryRepository,
   ProductDocument,
+  CategoryRepository,
   UserDocument,
 } from 'src/DB';
 import { ProductRepository } from 'src/DB/repository/product.repository';
-import { FolderEnum, S3Service } from 'src/common';
+import { FolderEnum, GetAllDto, S3Service } from 'src/common';
 import { randomUUID } from 'node:crypto';
 import { Types } from 'mongoose';
+import { lean } from 'src/DB/repository/database.repository';
 
 @Injectable()
 export class ProductService {
@@ -159,7 +159,7 @@ export class ProductService {
     if (files?.length) {
       attachments = await this.s3service.uploadFiles({
         files,
-        path: `${(FolderEnum.Category as unknown as CategoryDocument).assetFolderId}/${FolderEnum.Product}/${product.assetFolderId}`,
+        path: `${(FolderEnum.Category as unknown as ProductDocument).assetFolderId}/${FolderEnum.Product}/${product.assetFolderId}`,
       });
     }
 
@@ -200,15 +200,116 @@ export class ProductService {
     return updateProduct;
   }
 
-  findAll() {
-    return `This action returns all product`;
+  async freeze(
+    productId: Types.ObjectId,
+    user: UserDocument,
+  ): Promise<string> {
+    const product = await this.productRepository.findOneAndUpdate({
+      filter: { _id: productId },
+      update: {
+        freezedAt: new Date(),
+        $unset: { restoredAt: true },
+        updatedBy: user._id,
+      },
+      options: { new: false },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Fail to find matching product instance ');
+    }
+
+    return 'Done';
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async remove(
+    productId: Types.ObjectId,
+    user: UserDocument,
+  ): Promise<string> {
+    const product = await this.productRepository.findOneAndDelete({
+      filter: {
+        _id: productId,
+        paranoid: false,
+        freezedAt: { $exists: true },
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Fail to find matching product instance ');
+    }
+    await this.s3service.deleteFiles({ urls: product.images });
+    return 'Done';
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  async restore(
+    productId: Types.ObjectId,
+    user: UserDocument,
+  ): Promise<ProductDocument | lean<ProductDocument>> {
+    const product = await this.productRepository.findOneAndUpdate({
+      filter: {
+        _id: productId,
+        paranoid: false,
+        freezedAt: { $exists: true },
+      },
+      update: {
+        restoredAt: new Date(),
+        $unset: { freezedAt: true },
+        updatedBy: user._id,
+      },
+      options: { new: false },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Fail to find matching product instance ');
+    }
+
+    return product;
+  }
+
+  async findAll(
+    data: GetAllDto,
+    archive: boolean = false,
+  ): Promise<{
+    docsCount?: number;
+    limit?: number;
+    pages?: number;
+    currentPage?: number | undefined;
+    result: ProductDocument[] | lean<ProductDocument>[];
+  }> {
+    const { page, size, search } = data;
+    const result = await this.productRepository.paginate({
+      filter: {
+        ...(search
+          ? {
+              $or: [
+                { name: { $regex: search, $options: 'i' } },
+                { slug: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
+              ],
+            }
+          : {}),
+        ...(archive ? { paranoid: false, freezedAt: { $exists: true } } : {}),
+      },
+      page,
+      size,
+    });
+    return result;
+  }
+
+  async findOne(
+    productId: Types.ObjectId,
+    archive: boolean = false,
+  ): Promise<ProductDocument | lean<ProductDocument>> {
+    const product = await this.productRepository.findOne({
+      filter: {
+        _id: productId,
+
+        ...(archive ? { paranoid: false, freezedAt: { $exists: true } } : {}),
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Fail to finds matching product instance');
+    }
+    return product;
   }
 }
