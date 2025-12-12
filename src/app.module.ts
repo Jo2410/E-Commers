@@ -10,6 +10,7 @@ import { ProductModule } from './modules/product/product.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { S3Service } from './common';
 import { BrandModule } from './modules/brand/brand.module';
+import { CartModule } from './modules/cart/cart.module';
 
 @Module({
   imports: [
@@ -24,7 +25,8 @@ import { BrandModule } from './modules/brand/brand.module';
     UserModule,
     CategoryModule,
     ProductModule,
-    BrandModule
+    BrandModule,
+    CartModule
   ],
   controllers: [AppController],
   providers: [AppService,S3Service],
