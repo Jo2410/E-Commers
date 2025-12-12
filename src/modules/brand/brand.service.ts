@@ -6,11 +6,10 @@ import {
 } from '@nestjs/common';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { BrandDocument, BrandRepository, UserDocument } from 'src/DB';
-import { FolderEnum, S3Service } from 'src/common';
+import { FolderEnum, GetAllDto, S3Service } from 'src/common';
 import { Types } from 'mongoose';
-import { GetAllDto, UpdateBrandDto } from './dto/update-brand.dto';
+import { UpdateBrandDto } from './dto/update-brand.dto';
 import { lean } from 'src/DB/repository/database.repository';
-// import { UpdateBrandDto } from './dto/update-brand.dto';
 
 @Injectable()
 export class BrandService {
@@ -193,18 +192,18 @@ export class BrandService {
   async findOne(
     brandId: Types.ObjectId,
     archive: boolean = false,
-  ): Promise<BrandDocument|lean<BrandDocument>> {
+  ): Promise<BrandDocument | lean<BrandDocument>> {
     const brand = await this.brandRepository.findOne({
-      filter:{
-        _id:brandId,
-      
-         ...(archive ? { paranoid: false, freezedAt: { $exists: true } } : {}),
-      },
-  })
+      filter: {
+        _id: brandId,
 
-  if (!brand) {
-    throw new NotFoundException('Fail to finds matching brand instance')
+        ...(archive ? { paranoid: false, freezedAt: { $exists: true } } : {}),
+      },
+    });
+
+    if (!brand) {
+      throw new NotFoundException('Fail to finds matching brand instance');
+    }
+    return brand;
   }
-  return brand
-}
 }

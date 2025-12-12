@@ -5,11 +5,3 @@ export class BrandResponse {
 }
 
 
-export class GetAllResponse {
-    result:{
-        docsCount?:number,
-        limit?:number,
-        pages?:number,
-        currentPage?:number |undefined ,
-        result:IBrand[]
-      }}
