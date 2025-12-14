@@ -1,5 +1,5 @@
 import { ICart } from "src/common";
 
 export class CartResponse {
-    car:ICart
+    cart:ICart
 }
