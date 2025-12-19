@@ -58,7 +58,7 @@ export abstract class DatabaseRepository<
     filter?: RootFilterQuery<TRawDocument>;
     select?: ProjectionType<TRawDocument> | null;
     options?: QueryOptions<TDocument> | null;
-  }): Promise<lean<TDocument> | HydratedDocument<TDocument> | null> {
+  }): Promise< HydratedDocument<TDocument> | null> {
     const doc = this.model.findOne(filter).select(select || '');
 
     if (options?.populate) {
